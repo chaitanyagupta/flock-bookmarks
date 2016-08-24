@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bookmarks</title>
+    <style>
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+      }
+    </style>
+    <script src="https://apps-static.flock.co/js-sdk/0.1.0/flock.js"></script>
+  </head>
+  <body>
+    <h3>{{event.chatName}}</h3>
+    {{#list.length}}
+    <ul>
+      {{#list}}
+      <li>{{{.}}}</li>
+      {{/list}}
+    </ul>
+    {{/list.length}}
+    {{^list.length}}
+    <p>No Bookmarks for you</p>
+    {{/list.length}}
+    <script>
+      console.log('test test');
+      document.querySelectorAll('body a').forEach(function (a) {
+        console.log('Working on anchor tag');
+        console.log(a);
+        a.addEventListener('click', function (e) {
+          console.log('event is');
+          console.log(e);
+          e.preventDefault();
+          flock.openBrowser(e.target.href);
+          return false;
+        });
+      });
+    </script>
+  </body>
+</html>
