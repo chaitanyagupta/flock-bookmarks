@@ -1,3 +1,13 @@
+var userTokens = {};
+
+exports.getUserToken = function (userId) {
+    return userTokens[userId];
+}
+
+exports.saveUserToken = function (userId, token) {
+    userTokens[userId] = token;
+}
+
 var chats = {};
 
 var conversationId = function (userId, chat) {
@@ -8,7 +18,7 @@ var conversationId = function (userId, chat) {
     }
 }
 
-exports.save = function (userId, chat, text) {
+exports.saveBookmark = function (userId, chat, text) {
     var cid = conversationId(userId, chat);
     if (!chats[cid]) {
         chats[cid] = [text];
@@ -17,6 +27,6 @@ exports.save = function (userId, chat, text) {
     }
 };
 
-exports.list = function (userId, chat) {
+exports.listBookmarks = function (userId, chat) {
     return chats[conversationId(userId, chat)];
 };

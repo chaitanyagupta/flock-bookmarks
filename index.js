@@ -62,7 +62,7 @@ app.get('/bookmarks', function (request, response) {
     var decodedToken = verifyValidationToken(validationToken, secret);
     console.log('decoded token: ', decodedToken);
     response.set('Content-Type', 'text/html');
-    var list = store.list(decodedToken.userId, event.chat);
+    var list = store.listBookmarks(decodedToken.userId, event.chat);
     console.log('list: ', list);
     if (list) {
         list = list.map(function (text) {
@@ -74,11 +74,27 @@ app.get('/bookmarks', function (request, response) {
 });
 
 eventListener.on('app.install', function (payload, userId, request, response) {
+    //store.saveUserToken(userId, payload.userToken);
     response.send();
 });
 
+var request = require('request');
+var apiEndpoint = 'https://api.flock-staging.co/v1/chat.sendMessage';
+
 eventListener.on('client.slashCommand', function (payload, userId, request, response) {
-    store.save(userId, payload.chat, payload.text);
+    store.saveBookmark(userId, payload.chat, payload.text);
+    /*
+    request.post({
+        url: apiEndpoint,
+        headers: {
+            'X-Flock-User-Token': store.getUserToken(userId);
+        },
+        body { text: 'Bookmark added: ' + payload.text }
+    }).on('response', function (response) {
+        console.log(response.statusCode);
+        console.log(response.headers['content-type']);
+    });
+    */
 });
 
 app.listen(8080, function () {
