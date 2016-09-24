@@ -7,8 +7,9 @@ var express = require('express');
 var bodyParser = require('body-parser');
 
 var app = express();
-app.post('/events', flock.router);
+app.use(flock.validationTokenChecker);
 
+app.post('/events', flock.router);
 flock.events.on('client.slashCommand', function (event) {
     store.saveBookmark(event.userId, event.chat, event.text);
     return {
@@ -26,7 +27,6 @@ app.get('/bookmarks', function (request, response) {
     console.log('request query: ', request.query);
     var event = JSON.parse(request.query.flockEvent);
     console.log('event: ', event);
-    var validationToken = request.query.flockValidationToken;
     response.set('Content-Type', 'text/html');
     var list = store.listBookmarks(event.userId, event.chat);
     console.log('list: ', list);
