@@ -1,50 +1,18 @@
-var id = '93df590f-1a6d-4012-b0d6-3c10af353514';
-var secret = '55a70e7a-4374-42fc-b705-fd0fe1811d5a';
+var flock = require('flockos');
 
-var crypto = require('crypto');
-
-// FIXME:
-//   1. Doesn't do constant time comparison of signatures
-//   2. Doesn't verify expiry
-//   3. Check that the app id is ours
-var verifyValidationToken = function (token, secret) {
-    var constEqual = function (b1, b2) {
-        return Buffer.compare(b1, b2) === 0;
-    }
-    var parts = token.split('.');
-    var jwsPayload = parts.slice(0, 2).join('.');
-    var hmac = crypto.createHmac('sha256', secret);
-    hmac.update(jwsPayload);
-    var signature = hmac.digest();
-    var tokenSignature = new Buffer(parts[2], 'base64');
-    if (!constEqual(signature, tokenSignature)) {
-        return null;
-    } else {
-        return JSON.parse(new Buffer(parts[1], 'base64'));
-    }
-}
+flock.setAppId('818016e2-2b8c-4f60-86de-6ad9b7869db9');
+flock.setAppSecret('fca31146-278b-450e-9b9d-cf9429bac9e1');
 
 var express = require('express');
 var bodyParser = require('body-parser');
-var EventEmitter = require('events');
 
 var app = express();
-var eventListener = new EventEmitter();
+app.post('/events', flock.router);
 
-app.use(bodyParser.json());
-
-app.post('/events', function (request, response) {
-    console.log('received request: ', request.method, request.url, request.headers);
-
-    var validationToken = request.headers['x-flock-validation-token'];
-    var decodedToken = verifyValidationToken(validationToken, secret);
-    console.log('decoded token: ', decodedToken);
-    if (!decodedToken) {
-        console.log('Invalidation validation token');
-        response.status(400).send();
-    } else {
-        console.log('request body: %j', request.body);
-        eventListener.emit(request.body.name, request.body, decodedToken.userId, request, response);
+flock.events.on('client.slashCommand', function (event) {
+    store.saveBookmark(event.userId, event.chat, event.text);
+    return {
+        text: "Saved your bookmark: " + event.text
     }
 });
 
@@ -59,10 +27,8 @@ app.get('/bookmarks', function (request, response) {
     var event = JSON.parse(request.query.flockEvent);
     console.log('event: ', event);
     var validationToken = request.query.flockValidationToken;
-    var decodedToken = verifyValidationToken(validationToken, secret);
-    console.log('decoded token: ', decodedToken);
     response.set('Content-Type', 'text/html');
-    var list = store.listBookmarks(decodedToken.userId, event.chat);
+    var list = store.listBookmarks(event.userId, event.chat);
     console.log('list: ', list);
     if (list) {
         list = list.map(function (text) {
@@ -71,30 +37,6 @@ app.get('/bookmarks', function (request, response) {
     }
     var body = Mustache.render(template, { list: list, event: event });
     response.send(body);
-});
-
-eventListener.on('app.install', function (payload, userId, request, response) {
-    //store.saveUserToken(userId, payload.userToken);
-    response.send();
-});
-
-var request = require('request');
-var apiEndpoint = 'https://api.flock-staging.co/v1/chat.sendMessage';
-
-eventListener.on('client.slashCommand', function (payload, userId, request, response) {
-    store.saveBookmark(userId, payload.chat, payload.text);
-    /*
-    request.post({
-        url: apiEndpoint,
-        headers: {
-            'X-Flock-User-Token': store.getUserToken(userId);
-        },
-        body { text: 'Bookmark added: ' + payload.text }
-    }).on('response', function (response) {
-        console.log(response.statusCode);
-        console.log(response.headers['content-type']);
-    });
-    */
 });
 
 app.listen(8080, function () {

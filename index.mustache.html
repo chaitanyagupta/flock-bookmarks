@@ -23,7 +23,7 @@
     {{/list.length}}
     <script>
       console.log('test test');
-      document.querySelectorAll('body a').forEach(function (a) {
+      Array.prototype.slice.call(document.querySelectorAll('body a')).forEach(function (a) {
         console.log('Working on anchor tag');
         console.log(a);
         a.addEventListener('click', function (e) {
