@@ -23,12 +23,14 @@ var template = require('fs').readFileSync('index.mustache.html', 'utf8');
 var store = require('./store');
 var urlRegex = new RegExp('(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?');
 
-app.get('/bookmarks', function (request, response) {
-    console.log('request query: ', request.query);
-    var event = JSON.parse(request.query.flockEvent);
+app.get('/bookmarks', function (req, res) {
+    console.log('request query: ', req.query);
+    var userId = res.locals.validationTokenPayload.userId;
+    console.log('user id: ', userId);
+    var event = JSON.parse(req.query.flockEvent);
     console.log('event: ', event);
-    response.set('Content-Type', 'text/html');
-    var list = store.listBookmarks(event.userId, event.chat);
+    res.set('Content-Type', 'text/html');
+    var list = store.listBookmarks(userId, event.chat);
     console.log('list: ', list);
     if (list) {
         list = list.map(function (text) {
@@ -36,7 +38,7 @@ app.get('/bookmarks', function (request, response) {
         });
     }
     var body = Mustache.render(template, { list: list, event: event });
-    response.send(body);
+    res.send(body);
 });
 
 app.listen(8080, function () {
