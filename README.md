@@ -8,4 +8,4 @@ npm install
 node index.js
 ```
 
-Then replace the app id and app secret in [index.js][].
+Then replace the app id and app secret in [index.js](index.js).
